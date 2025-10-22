@@ -38,7 +38,7 @@ Start Docker-Desktop
 ### Create the default PEQ
 
 ```powershell
-..\..\make-queue.ps1
+..\..\make-cache.ps1
 ```
 
 ### Restore Node Packages

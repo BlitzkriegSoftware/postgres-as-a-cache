@@ -1,3 +1,4 @@
+import { resolve } from 'path';
 import * as pg from 'pg';
 
 /**
@@ -152,17 +153,74 @@ export class PAC {
     return result;
   }
 
-  async cache_set(cache_key: string, cache_value: string): Promise<void> {
-    if (isBlank(cache_key)) {
-      throw new CacheError('Key must not be empty', CacheErrorCode.BadKey);
-    }
+  /**
+   * Test to see if a result has rows
+   * @param result {pg.QueryResult<any>}
+   * @returns {boolean}
+   */
+  static has_rows(result: pg.QueryResult<any>) {
+    return result !== null && result.rowCount !== null && result.rowCount > 0;
   }
 
-  async cache_get(cache_key: string): Promise<string> {}
+  /**
+   * Cache a value with a name
+   * @param cache_key {string}
+   * @param cache_value {string}
+   */
+  async cache_set(cache_key: string, cache_value: string): Promise<void> {
+    if (PAC.isBlank(cache_key)) {
+      throw new CacheError('Key must not be empty', CacheErrorCode.BadKey);
+    }
+    if (PAC.isBlank(cache_value)) {
+      cache_value = '';
+    }
+    const sql = `CALL ${this.schemaName}.cache_set(${PAC.quoteIt(cache_key)}, ${PAC.quoteIt(cache_value)});`;
+    await this.doQuery(sql);
+  }
 
-  async cache_reset(): Promise<void> {}
+  /**
+   * Get a value given a key
+   * @param cache_key {string}
+   * @returns {string}
+   */
+  async cache_get(cache_key: string): Promise<string> {
+    if (PAC.isBlank(cache_key)) {
+      throw new CacheError('Key must not be empty', CacheErrorCode.BadKey);
+    }
+    let cache_value: string = '';
+    const sql = ` select c.value as item_value into cache_value, cache_value from ${this.schemaName}.cache where c.key = ${PAC.quoteIt(cache_key)};`;
+    const result = await this.doQuery(sql);
+    if (PAC.has_rows(result)) {
+      cache_value = result.rows[0].item_value;
+    }
+    return cache_value;
+  }
 
-  async has_keys(): Promise<boolean> {}
+  /**
+   * Reset Cache
+   */
+  async cache_reset(): Promise<void> {
+    const sql: string = `CALL ${this.schemaName}.reset_cache();`;
+    await this.doQuery(sql);
+  }
 
-  async cache_exists(): Promise<boolean> {}
+  /**
+   * Cache has keys?
+   * @returns {boolean}
+   */
+  async has_keys(): Promise<boolean> {
+    const sql: string = `select count(1) as CT from ${this.schemaName}.cache;`;
+    const result = await this.doQuery(sql);
+    return PAC.has_rows(result);
+  }
+
+  /**
+   * Test if cache exist
+   * @returns {boolean}
+   */
+  async cache_exists(): Promise<boolean> {
+    const sql = `SELECT c.relname AS object_name, CASE c.relkind WHEN 'r' THEN 'TABLE' WHEN 'v' THEN 'VIEW' WHEN 'm' THEN 'MATERIALIZED_VIEW' WHEN 'S' THEN 'SEQUENCE' ELSE 'OTHER_RELATION' END AS object_type FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname = '${this.schemaName}' AND c.relkind IN ('r', 'v', 'm', 'S') ORDER BY object_type, object_name;`;
+    const result = await this.doQuery(sql);
+    return PAC.has_rows(result);
+  }
 }

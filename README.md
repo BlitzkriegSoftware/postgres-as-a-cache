@@ -1,6 +1,5 @@
 # postgres-as-a-cache
 
-
 - [postgres-as-a-cache](#postgres-as-a-cache)
   - [Start Postgres and install cron \& pg\_cron](#start-postgres-and-install-cron--pg_cron)
     - [What does it do?](#what-does-it-do)
@@ -17,6 +16,7 @@
   - [Make a cache](#make-a-cache)
     - [Make-cache: What does it do?](#make-cache-what-does-it-do)
 
+* [License](./LICENSE)
 
 Use postgres as a cache
 
