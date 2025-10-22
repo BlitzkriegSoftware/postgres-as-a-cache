@@ -47,6 +47,9 @@ BEGIN
 
         exit when loop_count >= test_iterations;
         loop_count := loop_count + 1;
+
+        RAISE NOTICE 'cache_set(%,%)', cache_key, cache_value;
+
         call {schema}.cache_set(cache_key, cache_value);
     end loop;
 

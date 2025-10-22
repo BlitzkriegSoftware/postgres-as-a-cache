@@ -1,26 +1,26 @@
 -- cache_set (or update)
 
 CREATE OR REPLACE PROCEDURE {schema}.cache_set(
-    IN key varchar(255),
-    IN value text
+    IN cache_key varchar(255),
+    IN cache_value text
 )
 LANGUAGE 'plpgsql'
 AS $BODY$
 
 BEGIN
 
-    IF key IS NULL or length(key) < 1 THEN
+    IF cache_key IS NULL or length(cache_key) < 1 THEN
         RAISE EXCEPTION 'Key can not be empty';
     END IF;
 
-    if value is NULL or length(value) < 1 THEN
+    if cache_value is NULL or length(cache_value) < 1 THEN
         value := '';
     END IF;
 
-    INSERT INTO cache (key, value) 
-        VALUES (key, value) 
+    INSERT INTO {schema}.cache (key, value) 
+        VALUES (cache_key, cache_value) 
     ON CONFLICT (key) DO 
-        UPDATE SET value = value;
+        UPDATE SET value = cache_value;
 
 END;
 $BODY$;
