@@ -16,6 +16,7 @@ DECLARE
     random_min INTEGER DEFAULT 0;
     str_length INTEGER DEFAULT 0;
     loop_count INTEGER DEFAULT 0;
+    test_bad INTEGER DEFAULT 0;
     test_iterations_consumer INTEGER := 0;
     test_iteration_default INTEGER := 100;
     test_result INTEGER DEFAULT 0; -- 0 Pass, 1 Fail

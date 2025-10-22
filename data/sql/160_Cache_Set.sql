@@ -14,7 +14,7 @@ BEGIN
     END IF;
 
     if cache_value is NULL or length(cache_value) < 1 THEN
-        value := '';
+        cache_value := '';
     END IF;
 
     INSERT INTO {schema}.cache (key, value) 
