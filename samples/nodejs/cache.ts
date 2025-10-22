@@ -188,7 +188,7 @@ export class PAC {
       throw new CacheError('Key must not be empty', CacheErrorCode.BadKey);
     }
     let cache_value: string = '';
-    const sql = ` select c.value as item_value into cache_value, cache_value from ${this.schemaName}.cache where c.key = ${PAC.quoteIt(cache_key)};`;
+    const sql = `select c.value as item_value into cache_value, cache_value from ${this.schemaName}.cache where c.key = ${PAC.quoteIt(cache_key)};`;
     const result = await this.doQuery(sql);
     if (PAC.has_rows(result)) {
       cache_value = result.rows[0].item_value;
