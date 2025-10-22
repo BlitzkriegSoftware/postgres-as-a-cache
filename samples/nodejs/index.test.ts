@@ -27,7 +27,8 @@ beforeEach(async () => {
 });
 
 test('cacheExists', async () => {
-  expect(cache.cache_exists()).toBeTrue();
+  const flag = await cache.cache_exists();
+  expect(flag).toBeTrue();
 });
 
 test('cacheTests', async () => {
@@ -40,14 +41,15 @@ test('cacheTests', async () => {
     i_len = 14;
     i_ct = getRandomInt(i_len, i_len * 4);
     let cache_value = getRandomString(i_ct);
-    cache.cache_set(cache_key, cache_value);
-    console.log(`{i}: {cache_key}={cache_value}`);
+    await cache.cache_set(cache_key, cache_value);
+    console.log(`${i}: ${cache_key}=${cache_value}`);
   }
 
-  expect(cache.has_keys()).toBeTrue();
+  const flag = await cache.has_keys();
+  expect(flag).toBeTrue();
 
-  keys.forEach((cache_key) => {
-    let cache_value = cache.cache_get(cache_key);
+  keys.forEach(async (cache_key) => {
+    let cache_value = await cache.cache_get(cache_key);
     expect(cache_value).toBeTruthy();
   });
 });

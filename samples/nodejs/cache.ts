@@ -209,7 +209,7 @@ export class PAC {
    * @returns {boolean}
    */
   async has_keys(): Promise<boolean> {
-    const sql: string = `select count(1) as CT from ${this.schemaName}.cache;`;
+    const sql: string = `select count(1) as ct from ${this.schemaName}.cache;`;
     const result = await this.doQuery(sql);
     return PAC.has_rows(result);
   }
