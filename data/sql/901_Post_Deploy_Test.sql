@@ -11,7 +11,12 @@ LANGUAGE 'plpgsql'
 AS $BODY$
 
 DECLARE
+    cache_key varchar(255) DEFAULT '';
+    cache_value text DEFAULT '';
+    random_min INTEGER DEFAULT 0;
+    str_length INTEGER DEFAULT 0;
     loop_count INTEGER DEFAULT 0;
+    test_iterations_consumer INTEGER := 0;
     test_iteration_default INTEGER := 100;
     test_result INTEGER DEFAULT 0; -- 0 Pass, 1 Fail
     test_result_text varchar(128);
@@ -31,9 +36,18 @@ BEGIN
     -- The PRODUCER
     loop_count := 0;
     loop
+
+        random_min := 7;
+        SELECT test_cache_01.random_between(random_min, random_min * 3) into str_length;
+        select test_cache_01.random_string(str_length) into cache_key;
+
+        random_min := 17;
+        SELECT test_cache_01.random_between(random_min, random_min * 4) into str_length;
+        select test_cache_01.random_string(str_length) into cache_value;
+
         exit when loop_count >= test_iterations;
         loop_count := loop_count + 1;
-        call {schema}.cache_set(key, value);
+        call {schema}.cache_set(cache_key, cache_value);
     end loop;
 
     -- The CONSUMER
@@ -44,9 +58,9 @@ BEGIN
         exit when loop_count >= test_iterations_consumer;
         loop_count := loop_count + 1;
 
-        select c.key, c.value into key, value from {schema}.cache as c SKIP (loop_count);
+        select c.key, c.value into cache_key, cache_value from {schema}.cache as c OFFSET (loop_count);
 
-        RAISE NOTICE '[%] cache_get. key: % = %', loop_count, key, value;
+        RAISE NOTICE '[%] cache_get. cache_key: % = %', loop_count, cache_key, cache_value;
 
     END LOOP;
 
