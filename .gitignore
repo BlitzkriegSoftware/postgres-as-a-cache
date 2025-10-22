@@ -416,3 +416,11 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# pgdata folder
+**/pgdata/
+# temp folder
+**/temp/
+
+# pgpass
+**/.pgpass
