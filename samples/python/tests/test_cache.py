@@ -34,13 +34,21 @@ logging.config.dictConfig(logging_config)
 logger = logging.getLogger(__name__)
 
 def test_uow():
+    whereami: str = 'ctor'
+    client = pac_client.pac_client()
+    assert client is not None
+
     keys = []
+    whereami = 'set'
     for i in range(test_count):
         cache_key = ''.join(random.choices(string.ascii_letters + string.digits, k=8))
         keys.append(cache_key)
         cache_value = ''.join(random.choices(string.ascii_letters + string.digits, k=15))
-        pac_client.cache_set(cache_key, cache_value)
-    
+        print(f"{whereami}. {cache_key}={cache_value}")
+        client.cache_set(cache_key, cache_value)
+
+    whereami = 'get'    
     for i in range(test_count):
         cache_key = keys[i]
-        cache_value = pac_client.cache_get(cache_key)
+        cache_value = client.cache_get(cache_key)
+        print(f"{whereami}. {cache_key}={cache_value}")

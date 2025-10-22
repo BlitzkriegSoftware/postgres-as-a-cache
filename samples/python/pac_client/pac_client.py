@@ -4,6 +4,7 @@ import logging
 logging.basicConfig(level=logging.DEBUG)
 
 class pac_client:
+
     """
     Default connection string - the demo docker one
     """
@@ -12,7 +13,7 @@ class pac_client:
     """
     Default Schema Name
     """
-    default_schema_name = 'test01'
+    default_schema_name = 'test_cache_01'
 
     """
     Default Role Name
