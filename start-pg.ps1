@@ -34,7 +34,7 @@ function Get-PortBlocked {
 
 	$inUse = Test-NetConnection localhost -Port 5432
 
-	if (($null -eq $inUse) -or (-not $inUse.TcpTestSucceeded)) {
+	if (($null -eq $inUse) -or ($inUse.TcpTestSucceeded)) {
 		$flag = $true;
 	}
 
