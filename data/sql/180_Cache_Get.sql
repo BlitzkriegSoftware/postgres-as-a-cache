@@ -20,7 +20,8 @@ BEGIN
         RAISE EXCEPTION 'Key can not be empty';
     END IF;
 
-    SELECT c.value into cache_value FROM {schema}.cache as c WHERE key = cache_key;
+    SELECT c.value into cache_value FROM {schema}.cache as c 
+    WHERE (key = cache_key) and (expires > CURRENT_TIMESTAMP);
     GET DIAGNOSTICS row_count = ROW_COUNT;
 	
 	IF row_count > 0 THEN

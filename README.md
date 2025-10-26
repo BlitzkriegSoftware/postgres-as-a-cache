@@ -15,6 +15,9 @@
     - [Preparation](#preparation)
   - [Make a cache](#make-a-cache)
     - [Make-cache: What does it do?](#make-cache-what-does-it-do)
+  - [Client Samples](#client-samples)
+  - [Cron](#cron)
+    - [Cron Jobs](#cron-jobs)
 
 * [License](./LICENSE)
 
@@ -136,3 +139,30 @@ Arguments:
 5. When done, the cache is ready for use
 
 This will create the objects in [Data Schema](./data/README.md) 
+
+## Client Samples
+
+[Sample clients](./samples/README.md)
+
+
+## Cron
+
+Copied from [pg_cron](https://github.com/citusdata/pg_cron/blob/main/README.md?plain=1)
+
+```
+ ┌───────────── min (0 - 59)
+ │ ┌────────────── hour (0 - 23)
+ │ │ ┌─────────────── day of month (1 - 31) or last day of the month ($)
+ │ │ │ ┌──────────────── month (1 - 12)
+ │ │ │ │ ┌───────────────── day of week (0 - 6) (0 to 6 are Sunday to
+ │ │ │ │ │                  Saturday, or use names; 7 is also Sunday)
+ │ │ │ │ │
+ │ │ │ │ │
+ * * * * *
+```
+
+An easy way to create a cron schedule is: [crontab.guru](http://crontab.guru/).
+
+### Cron Jobs
+
+See: [Cron Setup](./data/sql/800_Cron_Setup.sql)

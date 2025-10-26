@@ -68,8 +68,7 @@ public class CacheItem
     /// <summary>
     /// Message Payload
     /// </summary>
-    public string Cache_Value
-    { get; set; } = string.Empty;
+    public string Cache_Value { get; set; } = string.Empty;
 
     /// <summary>
     /// CTOR
@@ -127,7 +126,7 @@ public class PAC
     #region "CTOR"
 
     /// <summary>
-    /// CTOR: Empty not allowd
+    /// CTOR: Empty not allowed
     /// </summary>
     private PAC() { }
 
@@ -223,13 +222,20 @@ public class PAC
     #endregion
 
     /// <summary>
-    /// Store a key, value
+    /// Store a key, value with optional expiration
     /// </summary>
     /// <param name="cache_key">(sic)</param>
     /// <param name="cache_value">(sic)</param>
-    public void Cache_Set(string cache_key, string cache_value)
+    /// <param name="expires">(sic)</param>
+    public void Cache_Set(string cache_key, string cache_value, DateTime? expires = null)
     {
-        string sql = $"CALL {this.schemaName}.cache_set({PAC.QuoteIt(cache_key)}, {PAC.QuoteIt(cache_value)});";
+        // ISO 8601 Date Format
+        string dt = DateTime.MaxValue.ToString("O");
+        if (expires.HasValue)
+            dt = expires.Value.ToString("O");
+
+        string sql =
+            $"CALL {this.schemaName}.cache_set({PAC.QuoteIt(cache_key)}, {PAC.QuoteIt(cache_value)}, {PAC.QuoteIt(dt)});";
         _ = DoQuery(sql);
     }
 
@@ -241,7 +247,7 @@ public class PAC
     public string Cache_Get(string cache_key)
     {
         string cache_value = string.Empty;
-        string sql = $"select c.value as item_value into cache_value, cache_value from {this.schemaName}.cache where c.key = {PAC.QuoteIt(cache_key)};";
+        string sql = $"SELECT {this.schemaName}.cache_get({PAC.QuoteIt(cache_key)});";
         var dt = DoQuery(sql);
         if (HasRows(dt))
         {
@@ -288,5 +294,4 @@ public class PAC
         string sql = $"CALL {this.schemaName}.reset_cache();";
         _ = DoQuery(sql);
     }
-
 }

@@ -1,9 +1,6 @@
-using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
-using System.Text.Json;
 using Microsoft.Extensions.Logging;
-using Xunit.Abstractions;
 
 namespace cache.test.csproj;
 
@@ -11,7 +8,10 @@ namespace cache.test.csproj;
 public class Queue_Test
 {
     #region "Privates"
-    Random dice = new Random();
+
+    private static int milliseconds = DateTimeOffset.UtcNow.Millisecond;
+
+    Random dice = new Random(milliseconds);
     string validChars = "abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ.";
     private readonly ITestOutputHelper _testOutputHelper;
     #endregion
@@ -27,6 +27,23 @@ public class Queue_Test
         }
         return sb.ToString();
     }
+
+    private string RandomKey()
+    {
+        int str_len = 7;
+        int str_ct = dice.Next(str_len, str_len * 3);
+        string cache_key = RandomString(str_ct);
+        return cache_key;
+    }
+
+    private string RandomValue()
+    {
+        int str_len = 11;
+        int str_ct = dice.Next(str_len, str_len * 4);
+        string cache_value = RandomString(str_ct);
+        return cache_value;
+    }
+
     #endregion
 
     /// <summary>
@@ -74,13 +91,9 @@ public class Queue_Test
         // Queue up some messages
         for (int i = 0; i < test_count; i++)
         {
-            int str_len = 7;
-            int str_ct = dice.Next(str_len, str_len * 3);
-            string cache_key = RandomString(str_ct);
+            string cache_key = RandomKey();
             keys.Add(cache_key);
-            str_len = 11;
-            str_ct = dice.Next(str_len, str_len * 4);
-            string cache_value = RandomString(str_ct);
+            string cache_value = RandomValue();
             cache.Cache_Set(cache_key, cache_value);
         }
 
@@ -98,7 +111,21 @@ public class Queue_Test
                 Console.WriteLine(ex.ToString());
             }
         }
-
     }
 
+    [Fact]
+    public void Test_Expiration()
+    {
+        PAC cache = MakeClient();
+        Assert.True(cache.Exists());
+
+        // UC: Key Expires
+        string cache_key = RandomKey();
+        string cache_value = RandomValue();
+        DateTime expires = DateTime.Now.AddMilliseconds(1);
+        cache.Cache_Set(cache_key, cache_value, expires);
+        Thread.Sleep(30);
+        string val2 = cache.Cache_Get(cache_key);
+        Assert.True(string.IsNullOrWhiteSpace(val2));
+    }
 }
