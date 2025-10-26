@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 import psycopg2
 import logging
 
@@ -39,10 +40,20 @@ class pac_client:
         self.role_name = role_name
 
     """
-    store value into cache with key
+    store value into cache with key with expiration
     """
-    def cache_set(self, cache_key: str, cache_value: str):
-        sql: str = f"CALL ${self.schema_name}.cache_set(${pac_client.quote_it(cache_key)}, ${pac_client.quote_it(cache_value)});"
+    def cache_set(self, cache_key: str, cache_value: str, cache_expires: timedelta = timedelta(364885)):
+
+        if cache_expires is None:
+            cache_expires = timedelta(year = 9999)
+        
+        exp = datetime.now() + cache_expires;
+
+        self.microsecond = 0
+        self.tzinfo = None
+        dt: str = exp.isoformat()    
+
+        sql: str = f"CALL ${self.schema_name}.cache_set(${pac_client.quote_it(cache_key)}, ${pac_client.quote_it(cache_value)}, ${pac_client.quote_it(dt)});"
         self.do_query(sql)
 
     """
@@ -50,7 +61,7 @@ class pac_client:
     """
     def cache_get(self, cache_key:str) -> str:
         cache_value: str = ''
-        sql: str = f"select c.value as item_value into cache_value, cache_value from ${self.schema_name}.cache where c.key = ${pac_client.quote_it(cache_key)};"
+        sql: str = f"select value from ${self.schema_name}.cache_get( ${pac_client.quote_it(cache_key)} );"
         dt = self.do_query(sql)
         if pac_client.has_rows(dt):
             cache_value = dt[0][0]

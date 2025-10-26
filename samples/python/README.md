@@ -2,6 +2,12 @@
 
 Python Client for **PAC**
 
+## Create Python VENV
+
+```powershell
+ python3 -m venv .venv
+```
+
 ## Activate Python Environment
 
 ```powershell
