@@ -167,14 +167,19 @@ export class PAC {
    * @param cache_key {string}
    * @param cache_value {string}
    */
-  async cache_set(cache_key: string, cache_value: string): Promise<void> {
+  async cache_set(
+    cache_key: string,
+    cache_value: string,
+    expires: Date = new Date(2099, 11, 31)
+  ): Promise<void> {
     if (PAC.isBlank(cache_key)) {
       throw new CacheError('Key must not be empty', CacheErrorCode.BadKey);
     }
     if (PAC.isBlank(cache_value)) {
       cache_value = '';
     }
-    const sql = `CALL ${this.schemaName}.cache_set(${PAC.quoteIt(cache_key)}, ${PAC.quoteIt(cache_value)});`;
+
+    const sql = `CALL ${this.schemaName}.cache_set(${PAC.quoteIt(cache_key)}, ${PAC.quoteIt(cache_value)}, ${PAC.quoteIt(expires.toISOString())});`;
     await this.doQuery(sql);
   }
 
@@ -188,10 +193,10 @@ export class PAC {
       throw new CacheError('Key must not be empty', CacheErrorCode.BadKey);
     }
     let cache_value: string = '';
-    const sql = `select c.value as item_value into cache_value, cache_value from ${this.schemaName}.cache where c.key = ${PAC.quoteIt(cache_key)};`;
+    const sql = `select value from ${this.schemaName}.cache_get( ${PAC.quoteIt(cache_key)} );`;
     const result = await this.doQuery(sql);
     if (PAC.has_rows(result)) {
-      cache_value = result.rows[0].item_value;
+      cache_value = result.rows[0].value;
     }
     return cache_value;
   }

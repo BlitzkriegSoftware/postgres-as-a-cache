@@ -46,6 +46,8 @@ Start Docker-Desktop
 ```powershell
 # Make node_modules
 npm i
+# Update bun
+bun install --force
 ```
 
 ### Do a test compile
