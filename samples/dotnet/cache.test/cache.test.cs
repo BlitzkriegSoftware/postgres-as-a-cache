@@ -1,6 +1,9 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 using System.Text;
 using Microsoft.Extensions.Logging;
+using Postgres.Cache;
+using Postgres.Cache.Helpers;
 
 namespace cache.test.csproj;
 
@@ -125,7 +128,57 @@ public class Queue_Test
         DateTime expires = DateTime.Now.AddMilliseconds(1);
         cache.Cache_Set(cache_key, cache_value, expires);
         Thread.Sleep(30);
+        string val2 = string.Empty;
+        var ex = Record.Exception(() => val2 = cache.Cache_Get(cache_key));
+        Assert.IsType<CacheException>(ex);
+        Assert.Equal(CacheErrorCode.NotFound, ((CacheException)ex).ErrorCode);
+    }
+
+    [Fact]
+    public void Test_Key_NotFound()
+    {
+        PAC cache = MakeClient();
+        Assert.True(cache.Exists());
+        string cache_key = RandomKey();
+        string cache_value = string.Empty;
+        var ex = Record.Exception(() => cache_value = cache.Cache_Get(cache_key));
+        Assert.IsType<CacheException>(ex);
+        Assert.Equal(CacheErrorCode.NotFound, ((CacheException)ex).ErrorCode);
+    }
+
+    [Fact]
+    public void Test_Bad_Key()
+    {
+        PAC cache = MakeClient();
+        string cache_key = string.Empty;
+        string cache_value = string.Empty;
+        var ex = Record.Exception(() => cache_value = cache.Cache_Get(cache_key));
+        Assert.IsType<CacheException>(ex);
+        Assert.Equal(CacheErrorCode.BadKey, ((CacheException)ex).ErrorCode);
+        cache_value = RandomValue();
+        ex = Record.Exception(() => cache.Cache_Set(cache_key, cache_value));
+        Assert.IsType<CacheException>(ex);
+        Assert.Equal(CacheErrorCode.BadKey, ((CacheException)ex).ErrorCode);
+    }
+
+    [Fact]
+    public void Test_Expirations()
+    {
+        PAC cache = MakeClient();
+        string cache_key = RandomKey();
+        string cache_value = RandomValue();
+
+        TimeSpan ts = new TimeSpan(1, 0, 0);
+
+        cache.Cache_Set(cache_key, cache_value, ts);
         string val2 = cache.Cache_Get(cache_key);
-        Assert.True(string.IsNullOrWhiteSpace(val2));
+        Assert.Equal(cache_value, val2);
+
+        cache_key = RandomKey();
+        cache_value = RandomValue();
+        DateTime dt = DateTime.UtcNow.AddHours(1);
+        cache.Cache_Set(cache_key, cache_value, dt);
+        val2 = cache.Cache_Get(cache_key);
+        Assert.Equal(cache_value, val2);
     }
 }

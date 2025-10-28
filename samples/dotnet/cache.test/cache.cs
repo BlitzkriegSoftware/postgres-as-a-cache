@@ -1,15 +1,14 @@
-namespace cache.test.csproj;
+namespace Postgres.Cache;
 
 using System;
 using System.Data;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Text.Json;
-using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using Npgsql;
+using Postgres.Cache.Helpers;
 
-#region  "Custom Exceptions"
+#region  "Custom Exception"
 
 /// <summary>
 /// PEQ Client Error Codes
@@ -54,34 +53,6 @@ public class CacheException : Exception
 }
 
 #endregion
-
-/// <summary>
-/// Cache Items returned by DeCache()
-/// </summary>
-public class CacheItem
-{
-    /// <summary>
-    /// Message Id (PK)
-    /// </summary>
-    public string Cache_Key { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Message Payload
-    /// </summary>
-    public string Cache_Value { get; set; } = string.Empty;
-
-    /// <summary>
-    /// CTOR
-    /// </summary>
-    /// <param name="cache_key">(sic)</param>
-    /// <param name="expires">(sic)</param>
-    /// <param name="cache_value">(sic)</param>
-    public CacheItem(string cache_key, string cache_value)
-    {
-        this.Cache_Key = cache_key;
-        this.Cache_Value = cache_value;
-    }
-}
 
 /// <summary>
 /// Postgres Enterprise Cache (client)
@@ -222,13 +193,25 @@ public class PAC
     #endregion
 
     /// <summary>
-    /// Store a key, value with optional expiration
+    /// Store a key, value with optional absolute expiration
     /// </summary>
     /// <param name="cache_key">(sic)</param>
     /// <param name="cache_value">(sic)</param>
     /// <param name="expires">(sic)</param>
+    /// <exception cref="CacheException">If key not supplied</exception>
     public void Cache_Set(string cache_key, string cache_value, DateTime? expires = null)
     {
+        if (string.IsNullOrWhiteSpace(cache_key))
+        {
+            throw new CacheException("Key must be supplied", CacheErrorCode.BadKey);
+        }
+
+        // No nulls
+        if (string.IsNullOrWhiteSpace(cache_value))
+        {
+            cache_value = string.Empty;
+        }
+
         // ISO 8601 Date Format
         string dt = DateTime.MaxValue.ToString("O");
         if (expires.HasValue)
@@ -240,12 +223,43 @@ public class PAC
     }
 
     /// <summary>
+    /// Cache Set: Relative expiration
+    /// </summary>
+    /// <param name="cache_key">(sic)</param>
+    /// <param name="cache_value">(sic)</param>
+    /// <param name="expiresRelative">Timespan</param>
+    /// <exception cref="CacheException">If key not supplied</exception>
+    public void Cache_Set(string cache_key, string cache_value, TimeSpan expiresRelative)
+    {
+        DateTime dt = DateTime.UtcNow.Add(expiresRelative);
+        Cache_Set(cache_key, cache_value, dt);
+    }
+
+    /// <summary>
+    /// Cache Set: Infinite expiration
+    /// </summary>
+    /// <param name="cache_key">(sic)</param>
+    /// <param name="cache_value">(sic)</param>
+    /// <exception cref="CacheException">If key not supplied</exception>
+    public void Cache_Set(string cache_key, string cache_value)
+    {
+        DateTime dt = DateTime.MaxValue;
+        Cache_Set(cache_key, cache_value, dt);
+    }
+
+    /// <summary>
     /// Get a value given key
     /// </summary>
     /// <param name="cache_key">(sic)</param>
     /// <returns>value</returns>
+    /// <exception cref="CacheException">If key not found</exception>
     public string Cache_Get(string cache_key)
     {
+        if (string.IsNullOrWhiteSpace(cache_key))
+        {
+            throw new CacheException("Key must be supplied", CacheErrorCode.BadKey);
+        }
+
         string cache_value = string.Empty;
         string sql = $"SELECT {this.schemaName}.cache_get({PAC.QuoteIt(cache_key)});";
         var dt = DoQuery(sql);
@@ -253,7 +267,8 @@ public class PAC
         {
             cache_value = dt.Rows[0][0].ToString() ?? string.Empty;
         }
-        else
+
+        if (string.IsNullOrWhiteSpace(cache_value))
         {
             throw new CacheException($"Key: ${cache_key}", CacheErrorCode.NotFound);
         }

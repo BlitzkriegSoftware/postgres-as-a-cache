@@ -1,7 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 
-namespace cache.test.csproj;
+namespace Postgres.Cache.Helpers;
 
 /// <summary>
 /// Log Factory Helper
